@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: validated-app
+  labels:
+    app: validated-app
+spec:
+  initContainers:
+  - name: config-validator
+    image: busybox:1.35
+    command: ['sh', '-c']
+    args:
+    - |
+      echo "Validating configuration..."
+      
+      # Check required environment variables
+      if [ -z "$DATABASE_HOST" ]; then
+        echo "ERROR: DATABASE_HOST not set"
+        exit 1
+      fi
+      
+      if [ -z "$API_KEY" ]; then
+        echo "ERROR: API_KEY not set"
+        exit 1
+      fi
+      
+      # Validate configuration files
+      if [ ! -f /config/app-config.json ]; then
+        echo "ERROR: app-config.json not found"
+        exit 1
+      fi
+      
+      # Simple JSON validation
+      if ! grep -q "database" /config/app-config.json; then
+        echo "ERROR: Invalid configuration format"
+        exit 1
+      fi
+      
+      echo "Configuration validation passed!"
+    
+    env:
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_host
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: api_key
+    
+    volumeMounts:
+    - name: config-volume
+      mountPath: /config
+  
+  containers:
+  - name: main-app
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    env:
+    - name: DATABASE_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_host
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: api_key
+    
+    volumeMounts:
+    - name: config-volume
+      mountPath: /config
+  
+  volumes:
+  - name: config-volume
+    configMap:
+      name: app-config-yaml

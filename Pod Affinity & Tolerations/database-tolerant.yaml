@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-tolerant
+  labels:
+    app: database-tolerant
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: database-tolerant
+  template:
+    metadata:
+      labels:
+        app: database-tolerant
+    spec:
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "database"
+        effect: "NoSchedule"
+      containers:
+      - name: database
+        image: postgres:13
+        env:
+        - name: POSTGRES_PASSWORD
+          value: "password123"
+        - name: POSTGRES_DB
+          value: "testdb"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"

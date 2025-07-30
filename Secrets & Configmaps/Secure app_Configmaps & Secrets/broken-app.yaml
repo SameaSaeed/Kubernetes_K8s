@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-app
+spec:
+  containers:
+  - name: app
+    image: busybox:1.35
+    command: ['sleep', '3600']
+    env:
+    - name: MISSING_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: non-existent-secret
+          key: some-key

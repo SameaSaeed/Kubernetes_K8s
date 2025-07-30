@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: webapp1-route
+  namespace: ingress-lab
+spec:
+  parentRefs:
+  - name: webapp-gateway
+  hostnames:
+  - "gateway-app1.local"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: webapp1-service
+      port: 80
+      weight: 100

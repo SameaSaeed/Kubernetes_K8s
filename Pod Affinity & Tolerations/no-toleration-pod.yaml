@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-toleration-test
+  labels:
+    app: test
+spec:
+  containers:
+  - name: test
+    image: busybox:1.35
+    command: ['sleep', '3600']
+  nodeSelector:
+    dedicated: database

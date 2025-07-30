@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: multi-tier-app
+data:
+  BACKEND_URL: "http://backend-service:5000"
+  APP_TITLE: "Multi-Tier Kubernetes Application"
+  APP_PORT: "80"

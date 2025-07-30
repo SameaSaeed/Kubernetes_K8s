@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: advanced-multi-container
+  labels:
+    app: advanced-demo
+spec:
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  - name: shared-config
+    emptyDir: {}
+  
+  initContainers:
+  - name: data-initializer
+    image: busybox:1.35
+    command: ['sh', '-c']
+    args:
+    - |
+      echo "Initializing shared data..."
+      mkdir -p /data/input /data/output
+      echo "Sample data for processing" > /data/input/sample.txt
+      echo "timestamp=$(date)" > /data/input/metadata.txt
+      echo "Data initialization complete"
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  
+  containers:
+  - name: main-app
+    image: busybox:1.35
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      echo "Main application starting..."
+      while true; do
+        if [ -f /data/input/sample.txt ]; then
+          echo "Processing: $(cat /data/input/sample.txt)" > /data/output/processed.txt
+          echo "Processed at: $(date)" >> /data/output/processed.txt
+        fi
+        sleep 30
+      done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  
+  - name: monitor-sidecar
+    image: busybox:1.35
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      echo "Monitor sidecar starting..."
+      while true; do
+        echo "=== Monitoring shared data ==="
+        echo "Input files:"
+        ls -la /data/input/ 2>/dev/null || echo "No input directory"
+        echo "Output files:"
+        ls -la /data/output/ 2>/dev/null || echo "No output directory"
+        if [ -f /data/output/processed.txt ]; then
+          echo "Latest processed data:"
+          cat /data/output/processed.txt
+        fi
+        echo "---"
+        sleep 20
+      done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+  
+  - name: cleanup-sidecar
+    image: busybox:1.35
+    command: ["/bin/sh"]
+    args:
+    - -c
+    - |
+      echo "Cleanup sidecar starting..."
+      while true; do
+        echo "Running cleanup tasks..."
+        # Clean up old temporary files
+        find /data -name "*.tmp" -mtime +1 -delete 2>/dev/null || true
+        echo "Cleanup completed at $(date)"
+        sleep 60
+      done
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data

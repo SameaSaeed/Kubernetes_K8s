@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+  labels:
+    app: debug
+spec:
+  containers:
+  - name: debug-container
+    image: busybox:1.35
+    command: ['sleep', '3600']
+    
+    # Environment variables from ConfigMap
+    envFrom:
+    - configMapRef:
+        name: app-config
+    
+    # Environment variables from Secret
+    env:
+    - name: SECRET_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: api_key
+    - name: SECRET_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: database_password
+    
+    # Volume mounts
+    volumeMounts:
+    - name: config-files
+      mountPath: /config
+    - name: secret-files
+      mountPath: /secrets
+      readOnly: true
+  
+  volumes:
+  - name: config-files
+    configMap:
+      name: app-config-yaml
+  - name: secret-files
+    secret:
+      secretName: app-secrets-yaml

@@ -1,0 +1,42 @@
+groups:
+- name: security_alerts
+  rules:
+  - alert: HighAPIRequestRate
+    expr: rate(http_requests_total[5m]) > 10
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "High API request rate detected"
+      description: "API request rate is {{ $value }} requests/second, which exceeds the threshold of 10 req/sec"
+
+  - alert: UnauthorizedAccessAttempts
+    expr: rate(http_requests_total{status=~"401|403"}[5m]) > 2
+    for: 1m
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Multiple unauthorized access attempts"
+      description: "{{ $value }} unauthorized requests per second detected"
+
+  - alert: HighCPUUsage
+    expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 3m
+    labels:
+      severity: warning
+      category: performance
+    annotations:
+      summary: "High CPU usage detected"
+      description: "CPU usage is above 80% for more than 3 minutes"
+
+  - alert: SuspiciousNetworkActivity
+    expr: rate(node_network_receive_bytes_total[5m]) > 10000000
+    for: 2m
+    labels:
+      severity: warning
+      category: security
+    annotations:
+      summary: "Suspicious network activity detected"
+      description: "High network traffic: {{ $value }} bytes/second"

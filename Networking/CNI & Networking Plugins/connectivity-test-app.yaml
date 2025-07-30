@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: connectivity-test
+  namespace: network-test
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: connectivity-test
+  template:
+    metadata:
+      labels:
+        app: connectivity-test
+    spec:
+      containers:
+      - name: test-container
+        image: nicolaka/netshoot:latest
+        command: ['sleep', '3600']
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: connectivity-test-service
+  namespace: network-test
+spec:
+  selector:
+    app: connectivity-test
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

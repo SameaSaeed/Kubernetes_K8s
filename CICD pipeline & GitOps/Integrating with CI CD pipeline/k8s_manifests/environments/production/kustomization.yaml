@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../deployment.yaml
+- ../../service.yaml
+
+namePrefix: prod-
+namespace: production
+
+replicas:
+- name: cicd-app
+  count: 5
+
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value: "production-1.0.0"
+  target:
+    kind: Deployment
+    name: cicd-app

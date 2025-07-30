@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-html
+  namespace: multi-tier-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Multi-Tier Kubernetes App</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { text-align: center; color: #333; margin-bottom: 30px; }
+            .tier { margin: 20px 0; padding: 15px; border-left: 4px solid #007acc; background: #f9f9f9; }
+            .button { background: #007acc; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+            .button:hover { background: #005a99; }
+            .result { margin: 10px 0; padding: 10px; background: #e8f4f8; border-radius: 4px; }
+            .error { background: #ffe6e6; color: #cc0000; }
+            .success { background: #e6ffe6; color: #006600; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Multi-Tier Kubernetes Application</h1>
+                <p>Frontend → Backend → Database Communication Demo</p>
+            </div>
+            
+            <div class="tier">
+                <h3>🌐 Frontend Tier (Nginx)</h3>
+                <p>This HTML page is served by an Nginx container running in the frontend pod.</p>
+                <p><strong>Status:</strong> <span style="color: green;">Active</span></p>
+            </div>
+            
+            <div class="tier">
+                <h3>⚙️ Backend Tier (Python Flask)</h3>
+                <p>Click the buttons below to test communication with the backend service.</p>
+                <button class="button" onclick="testBackendHealth()">Test Backend Health</button>
+                <button class="button" onclick="testBackendData()">Test Database Connection</button>
+                <div id="backend-result" class="result" style="display: none;"></div>
+            </div>
+            
+            <div class="tier">
+                <h3>🗄️ Database Tier (MySQL)</h3>
+                <p>MySQL database running in a separate pod, accessible via backend service.</p>
+                <p><strong>Connection:</strong> Via backend service only (not directly accessible)</p>
+            </div>
+            
+            <div class="tier">
+                <h3>📋 Architecture Overview</h3>
+                <ul>
+                    <li><strong>Frontend:</strong> Nginx serving static content (this page)</li>
+                    <li><strong>Backend:</strong> Python Flask API with health and data endpoints</li>
+                    <li><strong>Database:</strong> MySQL database with persistent storage</li>
+                    <li><strong>Communication:</strong> Services enable inter-pod communication</li>
+                    <li><strong>Configuration:</strong> ConfigMaps store application settings</li>
+                </ul>
+            </div>
+        </div>
+        
+        <script>
+            async function testBackendHealth() {
+                const resultDiv = document.getElementById('backend-result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = 'Testing backend health...';
+                resultDiv.className = 'result';
+                
+                try {
+                    const response = await fetch('/api/health');
+                    const data = await response.json();
+                    resultDiv.innerHTML = `✅ Backend Health: ${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.innerHTML = `❌ Backend Health Check Failed: ${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+            
+            async function testBackendData() {
+                const resultDiv = document.getElementById('backend-result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = 'Testing database connection...';
+                resultDiv.className = 'result';
+                
+                try {
+                    const response = await fetch('/api/data');
+                    const data = await response.json();
+                    resultDiv.innerHTML = `✅ Database Connection: ${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } catch (error) {
+                    resultDiv.innerHTML = `❌ Database Connection Failed: ${error.message}`;
+                    resultDiv.className = 'result error';
+                }
+            }
+        </script>
+    </body>
+    </html>

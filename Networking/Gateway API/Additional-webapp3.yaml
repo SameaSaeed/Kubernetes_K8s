@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp3
+  namespace: ingress-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp3
+  template:
+    metadata:
+      labels:
+        app: webapp3
+    spec:
+      containers:
+      - name: webapp3
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-volume
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html-volume
+        configMap:
+          name: webapp3-html
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp3-html
+  namespace: ingress-lab
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Web App 3 - Canary</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #fff3e0; text-align: center; padding: 50px; }
+            h1 { color: #f57c00; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to Web Application 3 (Canary)</h1>
+        <p>This is the canary deployment version</p>
+        <p>Hostname: $(hostname)</p>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp3-service
+  namespace: ingress-lab
+spec:
+  selector:
+    app: webapp3
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP

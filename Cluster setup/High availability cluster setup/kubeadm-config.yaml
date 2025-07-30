@@ -1,0 +1,42 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 10.0.1.10
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: v1.28.2
+controlPlaneEndpoint: "k8s-api.local:6443"
+etcd:
+  external:
+    endpoints:
+    - https://10.0.1.30:2379
+    - https://10.0.1.31:2379
+    - https://10.0.1.32:2379
+    caFile: /etc/kubernetes/pki/etcd/ca.pem
+    certFile: /etc/kubernetes/pki/etcd/etcd.pem
+    keyFile: /etc/kubernetes/pki/etcd/etcd-key.pem
+networking:
+  serviceSubnet: "10.96.0.0/12"
+  podSubnet: "10.244.0.0/16"
+apiServer:
+  advertiseAddress: 10.0.1.10
+  certSANs:
+  - "k8s-api.local"
+  - "10.0.1.100"
+  - "10.0.1.10"
+  - "10.0.1.11"
+  - "10.0.1.12"
+  - "127.0.0.1"
+  - "localhost"
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: KubeletConfiguration
+cgroupDriver: systemd
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
